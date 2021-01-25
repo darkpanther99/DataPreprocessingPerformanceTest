@@ -21,7 +21,7 @@ A global array for the global test runs
 allimgswithrace = np.empty((IMAGENUM, TARGET_SIZE[0], TARGET_SIZE[1], DIM_NUM))
 
 '''
-A thread function to load some images and return with them
+A thread function, which loads the images from the start index to the end index, scales them, and returns them as a numpy array.
 '''
 def thread_function(start, end):
     #print("szal {} started".format(start))
@@ -32,7 +32,7 @@ def thread_function(start, end):
             threadimgs.append(img_to_array(load_img(os.path.join(PATH, file), target_size=TARGET_SIZE)))
 
     threadimgs = np.asarray(threadimgs)
-    threadimgs = threadimgs/255.0
+    threadimgs = threadimgs/255.0   #TODO:Move this up to the append line. There may be some performance increase.
 
     return threadimgs
 
@@ -68,7 +68,7 @@ def multithreaded_test():
 
 
 '''
-A multithreaded test run, which instead of numpy.concatenate, makes the array in once loop
+A multithreaded test run, which instead of numpy.concatenate, makes the array in one loop
 '''
 def multithreaded_test_with_optimized_concatenation():
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -76,7 +76,7 @@ def multithreaded_test_with_optimized_concatenation():
         for i in range(THREADNUM):
             futures.append(executor.submit(thread_function, i * STEP, (i + 1) * STEP))
 
-    allimgs = np.empty((IMAGENUM, TARGET_SIZE[0], TARGET_SIZE[1], DIM_NUM))
+    allimgs = np.empty((IMAGENUM, TARGET_SIZE[0], TARGET_SIZE[1], DIM_NUM), dtype='float32')
 
     i=0
     for future in futures:
@@ -105,7 +105,7 @@ A multithreaded test run, which doesnt concatenate, but places the images into a
 Since the place of the image is predefined, there will be no race conditions, locks are not necessary(no function tries to put two images to the same index)
 '''
 def multithreaded_test_with_global_trick():
-
+    #TODO:use normal threads instead of threadpool
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
         for i in range(THREADNUM):
@@ -113,6 +113,7 @@ def multithreaded_test_with_global_trick():
 
     for future in futures:
         print(future.result())
+
 
 '''
 A singlethreaded test run
